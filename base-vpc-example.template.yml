@@ -69,7 +69,7 @@ Resources:
       - Key: Name
         Value: !Sub ${AWS::StackName}-Private-B
         
-  # Some route tables for our subnets:        
+  # Some route tables for our subnets:
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -98,7 +98,7 @@ Resources:
     Properties:
       RouteTableId: !Ref PrivateRouteTable
       DestinationCidrBlock: 0.0.0.0/0
-      # Otherwise if we are using a NAT Gateway, route traffic through the NAT Gateway:
+      # Route traffic through the NAT Gateway:
       NatGatewayId: !Ref NATGateway
 
   # Attach the public subnets to public route tables, 

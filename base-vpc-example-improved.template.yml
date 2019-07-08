@@ -43,13 +43,14 @@ Parameters:
     Description:  What type of NAT to use for private instances to communicate with the internet.  A single EC2 instance can be used as a NAT, or you can use the AWS NAT Gateway (managed, scalable, more expensive).  This setting will be IGNORED if you do not build private subnets.
 
 Conditions:
-  BuildPrivateSubnets:  !Equals [ !Ref PrivateSubnets, True ] 
   BuildPublicB:         !Not [ !Equals [ !Ref NumberOfAZs, 1 ]]  
   BuildPublicC:         !Equals [ !Ref NumberOfAZs, 3 ]  
-  BuildPrivateB:        !And [ !Not [ !Equals [ !Ref NumberOfAZs, 1 ]], !Equals [ !Ref PrivateSubnets, True ] ]
-  BuildPrivateC:        !And [ !Equals [ !Ref NumberOfAZs, 3 ], !Equals [ !Ref PrivateSubnets, True ] ]
-  BuildNATGateway:      !And [ !Equals [ !Ref PrivateSubnets, True ], !Equals [ !Ref NATType, "NAT Gateway" ] ]
-  BuildNATInstance:     !And [ !Equals [ !Ref PrivateSubnets, True ], !Equals [ !Ref NATType, "EC2 NAT Instance" ] ]
+  BuildPrivateSubnets:  !Equals [ !Ref PrivateSubnets, True ] 
+  BuildPrivateA:        !Equals [ !Ref PrivateSubnets, True ]       # Can't determine how to build a condition from a separate single condition
+  BuildPrivateB:        !And [ Condition: BuildPrivateSubnets, Condition: BuildPublicB ]
+  BuildPrivateC:        !And [ Condition: BuildPrivateSubnets, Condition: BuildPublicC ]
+  BuildNATGateway:      !And [ Condition: BuildPrivateSubnets, !Equals [ !Ref NATType, "NAT Gateway" ] ]
+  BuildNATInstance:     !And [ Condition: BuildPrivateSubnets, !Equals [ !Ref NATType, "EC2 NAT Instance" ] ]
 
 
 Mappings:
@@ -110,7 +111,7 @@ Resources:
       AvailabilityZone: !Select [ 0, !GetAZs ]    # Get the first AZ in the list        
       Tags:
       - Key: Name
-        Value: !Sub "${AWS::StackName}-Public-A"
+        Value: !Sub ${AWS::StackName}-Public-A
   PublicSubnetB:
     Type: AWS::EC2::Subnet
     Condition: BuildPublicB
@@ -120,7 +121,7 @@ Resources:
       AvailabilityZone: !Select [ 1, !GetAZs ]    # Get the second AZ in the list  
       Tags:
       - Key: Name
-        Value: !Sub "${AWS::StackName}-Public-B"
+        Value: !Sub ${AWS::StackName}-Public-B
   PublicSubnetC:
     Type: AWS::EC2::Subnet
     Condition: BuildPublicC
@@ -130,17 +131,17 @@ Resources:
       AvailabilityZone: !Select [ 2, !GetAZs ]    # Get the third AZ in the list  
       Tags:
       - Key: Name
-        Value: !Sub "${AWS::StackName}-Public-C"
+        Value: !Sub ${AWS::StackName}-Public-C
   PrivateSubnetA:
     Type: AWS::EC2::Subnet
-    Condition: BuildPrivateSubnets
+    Condition: BuildPrivateA
     Properties:
       VpcId: !Ref VPC
       CidrBlock: 10.1.50.0/24
       AvailabilityZone: !Select [ 0, !GetAZs ]    # Get the first AZ in the list  
       Tags:
       - Key: Name
-        Value: !Sub "${AWS::StackName}-Private-A"
+        Value: !Sub ${AWS::StackName}-Private-A
   PrivateSubnetB:
     Type: AWS::EC2::Subnet
     Condition: BuildPrivateB
@@ -150,7 +151,7 @@ Resources:
       AvailabilityZone: !Select [ 1, !GetAZs ]    # Get the second AZ in the list  
       Tags:
       - Key: Name
-        Value: !Sub "${AWS::StackName}-Private-B"
+        Value: !Sub ${AWS::StackName}-Private-B
   PrivateSubnetC:
     Type: AWS::EC2::Subnet
     Condition: BuildPrivateC
@@ -160,7 +161,7 @@ Resources:
       AvailabilityZone: !Select [ 2, !GetAZs ]    # Get the third AZ in the list  
       Tags:
       - Key: Name
-        Value: !Sub "${AWS::StackName}-Private-C"
+        Value: !Sub ${AWS::StackName}-Private-C
         
   # Some route tables for our subnets:        
   PublicRouteTable:
@@ -220,7 +221,7 @@ Resources:
       RouteTableId: !Ref PublicRouteTable
   PrivateSubnetARouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
-    Condition: BuildPrivateSubnets
+    Condition: BuildPrivateA
     Properties:
       SubnetId: !Ref PrivateSubnetA
       RouteTableId: !Ref PrivateRouteTable
@@ -310,7 +311,7 @@ Resources:
       SubnetId: !Ref PublicSubnetA
       Tags: 
       - Key: Name
-        Value: !Sub "NAT-${AWS::StackName}"
+        Value: !Sub NAT-${AWS::StackName}
   ElasticIPAddress:
     Type: AWS::EC2::EIP
     Condition: BuildNATGateway
@@ -359,9 +360,3 @@ Outputs:
     Value: !Ref PrivateSubnetC
     Export:
       Name: !Sub ${AWS::StackName}-PrivateSubnetC
-
-
-
-
-
-

@@ -1,8 +1,9 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 # This CloudFormation template deploys a basic VPC / Network.  Specifically:
-# It deploys a VPC with 4 subnets (2 public, 2 private) across 2 Availability Zones
-# An EC2 instance is used as a NAT; it is easy to turn off temporarily to save $.
+# It deploys a VPC with 1 to 6 subnets 3 Availability Zones depending on parameter selection.
+# User has the choice of public subnets or private + public subnets in each AZ.
+# When private subnets are created, NATing is provided by either an EC2 instance or NAT Gateway based on user selection.
 # The VPC and subnets are exported for use by other stacks.
 
 Metadata: 

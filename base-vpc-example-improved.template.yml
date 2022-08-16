@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: 2010-09-09
+AWSTemplateFormatVersion: 03-08-2021
 
 # This CloudFormation template deploys a basic VPC / Network.  Specifically:
 # It deploys a VPC with 1 to 6 subnets 3 Availability Zones depending on parameter selection.
